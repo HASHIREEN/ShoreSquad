@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ShoreSquad - Rally your crew, track weather, and hit the next beach cleanup! Join the eco-action movement.">
+    <meta name="keywords" content="beach cleanup, environmental action, weather tracking, community, eco-friendly">
+    <meta name="author" content="ShoreSquad Team">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="ShoreSquad - Beach Cleanup Rally App">
+    <meta property="og:description" content="Rally your crew, track weather, and hit the next beach cleanup with our dope map app!">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://shoresquad.app">
+    <meta property="og:image" content="./images/og-image.jpg">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ShoreSquad - Beach Cleanup Rally App">
+    <meta name="twitter:description" content="Rally your crew, track weather, and hit the next beach cleanup!">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="./images/favicon.ico">
+    <link rel="apple-touch-icon" href="./images/apple-touch-icon.png">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="./css/styles.css">
+    
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://api.openweathermap.org">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <title>ShoreSquad - Rally Your Crew for Beach Cleanups</title>
+</head>
+<body>
+    <!-- Skip to content for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <!-- Header -->
+    <header class="header" role="banner">
+        <nav class="navbar" role="navigation" aria-label="Main navigation">
+            <div class="container">
+                <div class="navbar-brand">
+                    <a href="#" class="brand-logo" aria-label="ShoreSquad Home">
+                        <span class="logo-icon">🏖️</span>
+                        <span class="brand-text">ShoreSquad</span>
+                    </a>
+                </div>
+                
+                <button class="navbar-toggle" aria-expanded="false" aria-controls="navbar-menu" aria-label="Toggle navigation menu">
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                </button>
+                
+                <div class="navbar-menu" id="navbar-menu">
+                    <ul class="navbar-nav" role="menubar">
+                        <li role="none"><a href="#home" role="menuitem">Home</a></li>
+                        <li role="none"><a href="#map" role="menuitem">Beach Map</a></li>
+                        <li role="none"><a href="#weather" role="menuitem">Weather</a></li>
+                        <li role="none"><a href="#rallies" role="menuitem">My Rallies</a></li>
+                        <li role="none"><a href="#leaderboard" role="menuitem">Leaderboard</a></li>
+                    </ul>
+                    <div class="navbar-actions">
+                        <button class="btn btn-outline" id="login-btn">Login</button>
+                        <button class="btn btn-primary" id="signup-btn">Join Squad</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <!-- Main Content -->
+    <main id="main-content" role="main">
+        <!-- Hero Section -->
+        <section class="hero" id="home">
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <h1 class="hero-title">
+                            Rally Your Crew,
+                            <span class="text-gradient">Clean the Shore!</span>
+                        </h1>
+                        <p class="hero-subtitle">
+                            Track weather, find cleanup spots, and make eco-action fun with ShoreSquad. 
+                            Join thousands making waves for cleaner beaches! 🌊
+                        </p>
+                        <div class="hero-actions">
+                            <button class="btn btn-primary btn-lg" id="start-rally-btn">
+                                <span class="btn-icon">📍</span>
+                                Start a Rally
+                            </button>
+                            <button class="btn btn-outline btn-lg" id="join-rally-btn">
+                                <span class="btn-icon">👥</span>
+                                Join Rally
+                            </button>
+                        </div>
+                        
+                        <!-- Quick Stats -->
+                        <div class="hero-stats" aria-label="ShoreSquad impact statistics">
+                            <div class="stat">
+                                <span class="stat-number" data-count="12500">0</span>
+                                <span class="stat-label">Kg Collected</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-number" data-count="284">0</span>
+                                <span class="stat-label">Beaches Cleaned</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-number" data-count="1847">0</span>
+                                <span class="stat-label">Squad Members</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="hero-visual">
+                        <div class="phone-mockup">
+                            <div class="phone-screen">
+                                <div class="app-preview" id="app-preview">
+                                    <!-- Animated app preview content will be injected here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Animated Wave Background -->
+            <div class="wave-animation" aria-hidden="true">
+                <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+                    <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" class="wave-fill"></path>
+                </svg>
+            </div>
+        </section>
+        
+        <!-- Beach Map Section -->
+        <section class="map-section" id="map">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Find Your Next Beach Cleanup</h2>
+                    <p class="section-subtitle">Discover beaches near you that need some TLC and upcoming rallies to join!</p>
+                </div>
+                
+                <div class="map-container">
+                    <div class="map-wrapper">
+                        <div id="beach-map" class="beach-map" role="img" aria-label="Interactive map showing beach cleanup locations">
+                            <div class="map-placeholder">
+                                <div class="map-icon">🗺️</div>
+                                <p>Interactive beach map loading...</p>
+                                <button class="btn btn-primary" id="load-map-btn">Load Map</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="map-sidebar">
+                        <div class="search-box">
+                            <label for="location-search" class="sr-only">Search for beaches or locations</label>
+                            <input type="search" id="location-search" placeholder="Search beaches or enter location..." class="search-input">
+                            <button type="submit" class="search-btn" aria-label="Search">🔍</button>
+                        </div>
+                        
+                        <div class="filter-options">
+                            <h3>Filter Beaches</h3>
+                            <div class="filter-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="need-cleanup" checked>
+                                    <span class="checkmark"></span>
+                                    Needs Cleanup
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="active-rallies">
+                                    <span class="checkmark"></span>
+                                    Active Rallies
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="beginner-friendly">
+                                    <span class="checkmark"></span>
+                                    Beginner Friendly
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="nearby-beaches">
+                            <h3>Nearby Beaches</h3>
+                            <div class="beach-list" id="beach-list">
+                                <!-- Beach items will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Weather Section -->
+        <section class="weather-section" id="weather">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Perfect Weather for Cleanup</h2>
+                    <p class="section-subtitle">Check conditions before you rally - sunshine makes everything better! ☀️</p>
+                </div>
+                
+                <div class="weather-dashboard">
+                    <div class="current-weather">
+                        <h3>Current Conditions</h3>
+                        <div class="weather-card" id="current-weather">
+                            <div class="weather-loading">
+                                <div class="loading-spinner"></div>
+                                <p>Loading weather data...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="weather-forecast">
+                        <h3>5-Day Forecast</h3>
+                        <div class="forecast-grid" id="weather-forecast">
+                            <!-- Forecast items will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <div class="weather-alerts">
+                        <h3>Weather Alerts</h3>
+                        <div class="alert-list" id="weather-alerts">
+                            <div class="alert alert-info">
+                                <span class="alert-icon">ℹ️</span>
+                                <span>Perfect cleanup weather this weekend! Light breeze, sunny skies.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- My Rallies Section -->
+        <section class="rallies-section" id="rallies">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Your Cleanup Squad</h2>
+                    <p class="section-subtitle">Organize rallies, track progress, and celebrate with your crew!</p>
+                </div>
+                
+                <div class="rallies-grid">
+                    <div class="rally-creation">
+                        <h3>Create New Rally</h3>
+                        <form class="rally-form" id="rally-form">
+                            <div class="form-group">
+                                <label for="rally-name">Rally Name *</label>
+                                <input type="text" id="rally-name" required placeholder="e.g., Sunset Beach Cleanup Squad">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="rally-location">Beach Location *</label>
+                                <input type="text" id="rally-location" required placeholder="Select from map or enter address">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="rally-date">Cleanup Date *</label>
+                                <input type="datetime-local" id="rally-date" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="rally-description">Description</label>
+                                <textarea id="rally-description" rows="3" placeholder="Tell your squad what to expect..."></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <span class="btn-icon">🚀</span>
+                                Launch Rally
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div class="active-rallies">
+                        <h3>Active Rallies</h3>
+                        <div class="rally-list" id="active-rallies">
+                            <!-- Rally items will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <div class="rally-history">
+                        <h3>Cleanup History</h3>
+                        <div class="history-stats">
+                            <div class="stat-card">
+                                <span class="stat-value">12</span>
+                                <span class="stat-label">Rallies Organized</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-value">245kg</span>
+                                <span class="stat-label">Waste Collected</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-value">8</span>
+                                <span class="stat-label">Beaches Cleaned</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Leaderboard Section -->
+        <section class="leaderboard-section" id="leaderboard">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Squad Leaderboard</h2>
+                    <p class="section-subtitle">See who's making the biggest impact on our shores! 🏆</p>
+                </div>
+                
+                <div class="leaderboard-container">
+                    <div class="leaderboard-tabs">
+                        <button class="tab-btn active" data-tab="individual">Top Cleaners</button>
+                        <button class="tab-btn" data-tab="teams">Squad Rankings</button>
+                        <button class="tab-btn" data-tab="monthly">This Month</button>
+                    </div>
+                    
+                    <div class="leaderboard-content">
+                        <div class="tab-pane active" id="individual-tab">
+                            <div class="leaderboard-list" id="individual-leaderboard">
+                                <!-- Leaderboard items will be populated by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <div class="tab-pane" id="teams-tab">
+                            <div class="leaderboard-list" id="teams-leaderboard">
+                                <!-- Team leaderboard will be populated by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <div class="tab-pane" id="monthly-tab">
+                            <div class="leaderboard-list" id="monthly-leaderboard">
+                                <!-- Monthly leaderboard will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="footer" role="contentinfo">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="brand-logo">
+                        <span class="logo-icon">🏖️</span>
+                        <span class="brand-text">ShoreSquad</span>
+                    </div>
+                    <p class="footer-tagline">Making waves for cleaner beaches, one rally at a time.</p>
+                    <div class="social-links">
+                        <a href="#" aria-label="Follow us on Instagram" class="social-link">📷</a>
+                        <a href="#" aria-label="Follow us on Twitter" class="social-link">🐦</a>
+                        <a href="#" aria-label="Join our Discord" class="social-link">💬</a>
+                        <a href="#" aria-label="Follow us on TikTok" class="social-link">🎵</a>
+                    </div>
+                </div>
+                
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h3>Get Started</h3>
+                        <ul>
+                            <li><a href="#map">Find Beaches</a></li>
+                            <li><a href="#rallies">Create Rally</a></li>
+                            <li><a href="#weather">Check Weather</a></li>
+                            <li><a href="#leaderboard">Leaderboard</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-column">
+                        <h3>Community</h3>
+                        <ul>
+                            <li><a href="#">Join Discord</a></li>
+                            <li><a href="#">Beach Safety</a></li>
+                            <li><a href="#">Cleanup Tips</a></li>
+                            <li><a href="#">Success Stories</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-column">
+                        <h3>Support</h3>
+                        <ul>
+                            <li><a href="#">Help Center</a></li>
+                            <li><a href="#">Contact Us</a></li>
+                            <li><a href="#">Report Bug</a></li>
+                            <li><a href="#">Privacy Policy</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 ShoreSquad. Making eco-action fun and accessible. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay" aria-hidden="true">
+        <div class="loading-content">
+            <div class="loading-spinner large"></div>
+            <p>Setting up your beach cleanup experience...</p>
+        </div>
+    </div>
+    
+    <!-- JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="./js/app.js"></script>
+</body>
+</html>

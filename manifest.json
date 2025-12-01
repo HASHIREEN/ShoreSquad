@@ -1,0 +1,102 @@
+{
+  "name": "ShoreSquad",
+  "short_name": "ShoreSquad",
+  "description": "Rally your crew, track weather, and hit the next beach cleanup with our dope map app!",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0ea5e9",
+  "orientation": "portrait-primary",
+  "categories": ["lifestyle", "social", "utilities"],
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/images/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/images/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/images/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/images/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/images/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/images/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/images/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/images/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Find Beaches",
+      "short_name": "Find",
+      "description": "Find beaches that need cleanup",
+      "url": "#map",
+      "icons": [{"src": "/images/icon-96x96.png", "sizes": "96x96"}]
+    },
+    {
+      "name": "Create Rally",
+      "short_name": "Rally",
+      "description": "Start a new cleanup rally",
+      "url": "#rallies",
+      "icons": [{"src": "/images/icon-96x96.png", "sizes": "96x96"}]
+    },
+    {
+      "name": "Check Weather",
+      "short_name": "Weather",
+      "description": "Check cleanup conditions",
+      "url": "#weather",
+      "icons": [{"src": "/images/icon-96x96.png", "sizes": "96x96"}]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/images/screenshot1.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "ShoreSquad main interface"
+    },
+    {
+      "src": "/images/screenshot2.png",
+      "sizes": "640x1136",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Mobile beach map view"
+    }
+  ]
+}
