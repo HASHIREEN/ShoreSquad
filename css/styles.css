@@ -855,8 +855,22 @@ a:focus {
 
 .forecast-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: var(--spacing-4);
+}
+
+.weather-attribution {
+  margin-top: var(--spacing-8);
+}
+
+.weather-attribution a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: var(--font-weight-medium);
+}
+
+.weather-attribution a:hover {
+  text-decoration: underline;
 }
 
 .alert {
@@ -872,6 +886,18 @@ a:focus {
   background: var(--primary-light);
   color: var(--primary-dark);
   border-left: 4px solid var(--primary-color);
+}
+
+.alert-success {
+  background: var(--success-light);
+  color: var(--success-dark);
+  border-left: 4px solid var(--success-color);
+}
+
+.alert-warning {
+  background: var(--warning-light);
+  color: var(--warning-dark);
+  border-left: 4px solid var(--warning-color);
 }
 
 .alert-icon {

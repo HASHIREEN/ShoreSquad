@@ -739,7 +739,7 @@ class ShoreSquadApp {
   }
 
   /**
-   * Load weather data (mock implementation)
+   * Load weather data using NEA's real-time weather API from data.gov.sg
    */
   async loadWeatherData(location) {
     const currentWeather = document.getElementById('current-weather');
@@ -752,74 +752,367 @@ class ShoreSquadApp {
       currentWeather.innerHTML = `
         <div class="weather-loading">
           <div class="loading-spinner"></div>
-          <p>Loading weather data...</p>
+          <p>Loading real-time weather data from NEA...</p>
         </div>
       `;
       
-      // Simulate API call
-      await this.delay(1500);
+      // Try multiple approaches for fetching NEA data
+      let weatherData, forecastData;
       
-      // Mock weather data
-      const mockCurrentWeather = {
-        temp: 28,
-        condition: 'Sunny',
-        humidity: 65,
-        windSpeed: 12,
-        emoji: '☀️'
+      try {
+        // First try: Direct API calls
+        const weatherResponse = await fetch('https://api.data.gov.sg/v1/environment/realtime-weather-readings', {
+          mode: 'cors',
+          headers: {
+            'Accept': 'application/json',
+          }
+        });
+        const forecastResponse = await fetch('https://api.data.gov.sg/v1/environment/4-day-weather-forecast', {
+          mode: 'cors',
+          headers: {
+            'Accept': 'application/json',
+          }
+        });
+        
+        if (weatherResponse.ok && forecastResponse.ok) {
+          weatherData = await weatherResponse.json();
+          forecastData = await forecastResponse.json();
+        } else {
+          throw new Error('Direct API call failed');
+        }
+      } catch (directError) {
+        console.log('Direct API failed, trying CORS proxy...');
+        
+        // Second try: Using a CORS proxy
+        try {
+          const weatherResponse = await fetch('https://cors-anywhere.herokuapp.com/https://api.data.gov.sg/v1/environment/realtime-weather-readings');
+          const forecastResponse = await fetch('https://cors-anywhere.herokuapp.com/https://api.data.gov.sg/v1/environment/4-day-weather-forecast');
+          
+          if (weatherResponse.ok && forecastResponse.ok) {
+            weatherData = await weatherResponse.json();
+            forecastData = await forecastResponse.json();
+          } else {
+            throw new Error('CORS proxy failed');
+          }
+        } catch (proxyError) {
+          console.log('CORS proxy failed, using fallback data...');
+          // Use realistic Singapore weather fallback data
+          weatherData = this.getFallbackWeatherData();
+          forecastData = this.getFallbackForecastData();
+        }
+      }
+      
+      if (!weatherData || !forecastData) {
+        throw new Error('All weather sources failed');
+      }
+      
+      // Process current weather data
+      let currentReadings, timestamp;
+      
+      if (weatherData.items && weatherData.items[0]) {
+        // Real NEA data
+        currentReadings = weatherData.items[0].readings[0];
+        timestamp = new Date(weatherData.items[0].timestamp);
+        
+        // Find closest weather station to user location
+        if (location && weatherData.items[0].readings.length > 1) {
+          let minDistance = Infinity;
+          weatherData.items[0].readings.forEach(reading => {
+            const distance = Math.sqrt(
+              Math.pow((reading.station_id.latitude || 0) - location.lat, 2) +
+              Math.pow((reading.station_id.longitude || 0) - location.lng, 2)
+            );
+            if (distance < minDistance) {
+              minDistance = distance;
+              currentReadings = reading;
+            }
+          });
+        }
+      } else {
+        // Fallback data
+        currentReadings = weatherData.current;
+        timestamp = new Date();
+      }
+      
+      // Get weather condition emoji based on readings
+      const getWeatherEmoji = (temp, humidity, rainfall) => {
+        if (rainfall > 0.5) return '🌧️';
+        if (humidity > 85) return '☁️';
+        if (temp > 30) return '☀️';
+        if (temp > 28) return '🌤️';
+        return '⛅';
       };
       
-      const mockForecast = [
-        { day: 'Today', high: 30, low: 24, condition: 'Sunny', emoji: '☀️' },
-        { day: 'Tomorrow', high: 28, low: 23, condition: 'Partly Cloudy', emoji: '⛅' },
-        { day: 'Tuesday', high: 26, low: 22, condition: 'Light Rain', emoji: '🌦️' },
-        { day: 'Wednesday', high: 29, low: 24, condition: 'Sunny', emoji: '☀️' },
-        { day: 'Thursday', high: 31, low: 25, condition: 'Hot', emoji: '🌞' }
-      ];
+      const currentTemp = currentReadings.air_temperature || currentReadings.temp;
+      const currentHumidity = currentReadings.relative_humidity || currentReadings.humidity;
+      const currentRainfall = currentReadings.rainfall || 0;
+      const weatherEmoji = getWeatherEmoji(currentTemp, currentHumidity, currentRainfall);
       
-      // Update current weather
+      // Update current weather display
       currentWeather.innerHTML = `
         <div style="text-align: center;">
-          <div style="font-size: 4rem; margin-bottom: 1rem;">${mockCurrentWeather.emoji}</div>
-          <div style="font-size: 2rem; font-weight: 600; margin-bottom: 0.5rem;">${mockCurrentWeather.temp}°C</div>
-          <div style="color: #6b7280; margin-bottom: 1rem;">${mockCurrentWeather.condition}</div>
+          <div style="font-size: 4rem; margin-bottom: 1rem;">${weatherEmoji}</div>
+          <div style="font-size: 2rem; font-weight: 600; margin-bottom: 0.5rem;">${currentTemp}°C</div>
+          <div style="color: #6b7280; margin-bottom: 1rem;">${weatherData.items ? 'Live Singapore Weather' : 'Singapore Weather'}</div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.875rem;">
             <div>
               <div style="color: #6b7280;">Humidity</div>
-              <div style="font-weight: 600;">${mockCurrentWeather.humidity}%</div>
+              <div style="font-weight: 600;">${currentHumidity}%</div>
             </div>
             <div>
-              <div style="color: #6b7280;">Wind</div>
-              <div style="font-weight: 600;">${mockCurrentWeather.windSpeed} km/h</div>
+              <div style="color: #6b7280;">Rainfall</div>
+              <div style="font-weight: 600;">${currentRainfall}mm</div>
             </div>
+          </div>
+          <div style="margin-top: 1rem; font-size: 0.75rem; color: #9ca3af;">
+            ${weatherData.items ? `Updated: ${timestamp.toLocaleTimeString()}` : 'Sample data for demo'}
           </div>
         </div>
       `;
       
-      // Update forecast
+      // Process forecast
       if (weatherForecast) {
-        weatherForecast.innerHTML = mockForecast.map(day => `
-          <div style="background: white; padding: 1rem; border-radius: 0.5rem; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">${day.day}</div>
-            <div style="font-size: 2rem; margin-bottom: 0.5rem;">${day.emoji}</div>
-            <div style="font-weight: 600; margin-bottom: 0.25rem;">${day.high}°/${day.low}°</div>
-            <div style="font-size: 0.75rem; color: #6b7280;">${day.condition}</div>
-          </div>
-        `).join('');
+        const forecasts = forecastData.items ? forecastData.items[0].forecasts : forecastData.forecasts;
+        
+        weatherForecast.innerHTML = forecasts.map(day => {
+          const date = new Date(day.date);
+          const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+          const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          
+          // Map weather descriptions to emojis
+          const getEmoji = (forecast) => {
+            const desc = forecast.toLowerCase();
+            if (desc.includes('rain') || desc.includes('shower')) return '🌧️';
+            if (desc.includes('thunder')) return '⛈️';
+            if (desc.includes('cloudy')) return '☁️';
+            if (desc.includes('partly cloudy')) return '⛅';
+            if (desc.includes('fair') || desc.includes('sunny')) return '☀️';
+            if (desc.includes('hazy')) return '🌫️';
+            return '🌤️';
+          };
+          
+          // Determine cleanup suitability
+          const getCleanupRating = (forecast) => {
+            const desc = forecast.toLowerCase();
+            if (desc.includes('fair') || desc.includes('sunny')) return { rating: 'Excellent', color: '#22c55e' };
+            if (desc.includes('partly cloudy')) return { rating: 'Good', color: '#f59e0b' };
+            if (desc.includes('cloudy') && !desc.includes('rain')) return { rating: 'Fair', color: '#6b7280' };
+            if (desc.includes('rain') || desc.includes('shower')) return { rating: 'Poor', color: '#ef4444' };
+            return { rating: 'Good', color: '#f59e0b' };
+          };
+          
+          const cleanupRating = getCleanupRating(day.forecast);
+          
+          return `
+            <div style="background: white; padding: 1.5rem; border-radius: 0.75rem; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid ${cleanupRating.color};">
+              <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">${dayName}</div>
+              <div style="font-size: 0.75rem; color: #9ca3af; margin-bottom: 0.75rem;">${dateStr}</div>
+              <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">${getEmoji(day.forecast)}</div>
+              <div style="font-weight: 600; margin-bottom: 0.5rem;">${day.temperature.low}° - ${day.temperature.high}°</div>
+              <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.75rem; line-height: 1.3;">${day.forecast}</div>
+              <div style="background: ${cleanupRating.color}; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.675rem; font-weight: 600;">
+                ${cleanupRating.rating} for Cleanup
+              </div>
+            </div>
+          `;
+        }).join('');
       }
       
-      this.weatherData = { current: mockCurrentWeather, forecast: mockForecast };
-      this.announceToScreenReader(`Weather loaded: ${mockCurrentWeather.temp} degrees, ${mockCurrentWeather.condition}`);
+      // Generate weather-based cleanup alerts
+      this.generateWeatherAlerts(forecasts, currentTemp, currentRainfall);
+      
+      this.weatherData = { 
+        current: { temp: currentTemp, humidity: currentHumidity, rainfall: currentRainfall },
+        forecast: forecasts,
+        lastUpdate: Date.now()
+      };
+      
+      this.announceToScreenReader(`Weather loaded: ${currentTemp} degrees Celsius, ${currentHumidity}% humidity`);
       
     } catch (error) {
       console.error('Error loading weather data:', error);
+      this.showWeatherError();
+    }
+  }
+
+  /**
+   * Get fallback weather data for Singapore
+   */
+  getFallbackWeatherData() {
+    return {
+      current: {
+        temp: 29,
+        humidity: 75,
+        rainfall: 0
+      }
+    };
+  }
+
+  /**
+   * Get fallback forecast data for Singapore
+   */
+  getFallbackForecastData() {
+    const today = new Date();
+    return {
+      forecasts: [
+        {
+          date: today.toISOString().split('T')[0],
+          forecast: 'Partly Cloudy',
+          temperature: { low: 26, high: 31 }
+        },
+        {
+          date: new Date(today.getTime() + 86400000).toISOString().split('T')[0],
+          forecast: 'Fair',
+          temperature: { low: 25, high: 32 }
+        },
+        {
+          date: new Date(today.getTime() + 172800000).toISOString().split('T')[0],
+          forecast: 'Thundery Showers',
+          temperature: { low: 24, high: 29 }
+        },
+        {
+          date: new Date(today.getTime() + 259200000).toISOString().split('T')[0],
+          forecast: 'Fair',
+          temperature: { low: 26, high: 33 }
+        }
+      ]
+    };
+  }
+
+  /**
+   * Generate weather-based cleanup alerts
+   */
+  generateWeatherAlerts(forecasts, currentTemp, currentRainfall) {
+    const alertsContainer = document.getElementById('weather-alerts');
+    if (!alertsContainer || !forecasts) return;
+    
+    const alerts = [];
+    
+    // Current conditions alert
+    if (currentRainfall === 0 && currentTemp >= 25 && currentTemp <= 32) {
+      alerts.push({
+        type: 'success',
+        icon: '🌞',
+        message: 'Perfect cleanup weather right now! Clear skies and comfortable temperature.'
+      });
+    } else if (currentRainfall > 0) {
+      alerts.push({
+        type: 'warning',
+        icon: '🌧️',
+        message: `Currently raining (${currentRainfall}mm). Wait for clearer weather to start cleanup.`
+      });
+    }
+    
+    // Forecast-based alerts
+    const nextGoodDays = forecasts.filter(day => 
+      day.forecast.toLowerCase().includes('fair') || 
+      day.forecast.toLowerCase().includes('sunny') ||
+      day.forecast.toLowerCase().includes('partly cloudy')
+    ).slice(0, 2);
+    
+    if (nextGoodDays.length > 0) {
+      const nextGoodDay = nextGoodDays[0];
+      const date = new Date(nextGoodDay.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+      alerts.push({
+        type: 'info',
+        icon: '📅',
+        message: `Best cleanup day this week: ${date} - ${nextGoodDay.forecast}`
+      });
+    }
+    
+    // Display alerts
+    alertsContainer.innerHTML = alerts.map(alert => `
+      <div class="alert alert-${alert.type}">
+        <span class="alert-icon">${alert.icon}</span>
+        <span>${alert.message}</span>
+      </div>
+    `).join('');
+  }
+
+  /**
+   * Show weather error with fallback data
+   */
+  showWeatherError() {
+    const currentWeather = document.getElementById('current-weather');
+    const weatherForecast = document.getElementById('weather-forecast');
+    
+    // Show fallback Singapore weather data
+    if (currentWeather) {
       currentWeather.innerHTML = `
-        <div style="text-align: center; color: #ef4444;">
-          <div style="font-size: 2rem; margin-bottom: 1rem;">⚠️</div>
-          <div>Unable to load weather data</div>
-          <button class="btn btn-outline" onclick="app.loadWeatherData(app.userLocation || {lat: 1.3521, lng: 103.8198})" style="margin-top: 1rem;">Retry</button>
+        <div style="text-align: center;">
+          <div style="font-size: 4rem; margin-bottom: 1rem;">🌤️</div>
+          <div style="font-size: 2rem; font-weight: 600; margin-bottom: 0.5rem;">29°C</div>
+          <div style="color: #6b7280; margin-bottom: 1rem;">Singapore Weather (Demo)</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.875rem;">
+            <div>
+              <div style="color: #6b7280;">Humidity</div>
+              <div style="font-weight: 600;">75%</div>
+            </div>
+            <div>
+              <div style="color: #6b7280;">Rainfall</div>
+              <div style="font-weight: 600;">0mm</div>
+            </div>
+          </div>
+          <div style="margin-top: 1rem; padding: 0.5rem; background: #fef3c7; border-radius: 0.5rem; font-size: 0.75rem; color: #92400e;">
+            ⚠️ Using sample data. Real weather data may be temporarily unavailable.
+          </div>
         </div>
       `;
     }
+    
+    if (weatherForecast) {
+      const today = new Date();
+      const forecasts = [
+        { date: today.toISOString().split('T')[0], forecast: 'Partly Cloudy', temperature: { low: 26, high: 31 } },
+        { date: new Date(today.getTime() + 86400000).toISOString().split('T')[0], forecast: 'Fair (Good for Cleanup!)', temperature: { low: 25, high: 32 } },
+        { date: new Date(today.getTime() + 172800000).toISOString().split('T')[0], forecast: 'Thundery Showers', temperature: { low: 24, high: 29 } },
+        { date: new Date(today.getTime() + 259200000).toISOString().split('T')[0], forecast: 'Fair (Perfect for Cleanup!)', temperature: { low: 26, high: 33 } }
+      ];
+      
+      weatherForecast.innerHTML = forecasts.map(day => {
+        const date = new Date(day.date);
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+        const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        
+        const getEmoji = (forecast) => {
+          if (forecast.includes('Fair')) return '☀️';
+          if (forecast.includes('Partly')) return '⛅';
+          if (forecast.includes('Thunder')) return '⛈️';
+          return '🌤️';
+        };
+        
+        const getCleanupRating = (forecast) => {
+          if (forecast.includes('Fair')) return { rating: 'Excellent', color: '#22c55e' };
+          if (forecast.includes('Partly')) return { rating: 'Good', color: '#f59e0b' };
+          if (forecast.includes('Thunder')) return { rating: 'Poor', color: '#ef4444' };
+          return { rating: 'Good', color: '#f59e0b' };
+        };
+        
+        const cleanupRating = getCleanupRating(day.forecast);
+        
+        return `
+          <div style="background: white; padding: 1.5rem; border-radius: 0.75rem; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid ${cleanupRating.color};">
+            <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">${dayName}</div>
+            <div style="font-size: 0.75rem; color: #9ca3af; margin-bottom: 0.75rem;">${dateStr}</div>
+            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">${getEmoji(day.forecast)}</div>
+            <div style="font-weight: 600; margin-bottom: 0.5rem;">${day.temperature.low}° - ${day.temperature.high}°</div>
+            <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.75rem; line-height: 1.3;">${day.forecast}</div>
+            <div style="background: ${cleanupRating.color}; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.675rem; font-weight: 600;">
+              ${cleanupRating.rating} for Cleanup
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    // Store fallback weather data
+    this.weatherData = {
+      current: { temp: 29, humidity: 75, rainfall: 0 },
+      forecast: forecasts,
+      lastUpdate: Date.now()
+    };
+    
+    this.announceToScreenReader('Weather data loaded with sample Singapore conditions');
   }
 
   /**
