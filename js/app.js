@@ -157,6 +157,8 @@ class ShoreSquadApp {
     const loadMapBtn = document.getElementById('load-map-btn');
     const locationSearch = document.getElementById('location-search');
     const filterCheckboxes = document.querySelectorAll('.filter-group input[type="checkbox"]');
+    const googleMapTab = document.getElementById('google-map-tab');
+    const interactiveMapTab = document.getElementById('interactive-map-tab');
 
     if (loadMapBtn) {
       loadMapBtn.addEventListener('click', () => {
@@ -175,6 +177,17 @@ class ShoreSquadApp {
         this.updateMapFilters();
       });
     });
+
+    // Map tab switching
+    if (googleMapTab && interactiveMapTab) {
+      googleMapTab.addEventListener('click', () => {
+        this.switchMapTab('google');
+      });
+      
+      interactiveMapTab.addEventListener('click', () => {
+        this.switchMapTab('interactive');
+      });
+    }
 
     // Load nearby beaches
     this.loadNearbyBeaches();
@@ -628,6 +641,72 @@ class ShoreSquadApp {
     setTimeout(() => {
       this.focusElement('#rally-name');
     }, 500);
+  }
+
+  /**
+   * Switch between Google Maps and Interactive Map
+   */
+  switchMapTab(tabType) {
+    const googleMapTab = document.getElementById('google-map-tab');
+    const interactiveMapTab = document.getElementById('interactive-map-tab');
+    const googleMapContainer = document.getElementById('google-map-container');
+    const interactiveMapContainer = document.getElementById('interactive-map-container');
+
+    // Update tab buttons
+    googleMapTab.classList.toggle('active', tabType === 'google');
+    interactiveMapTab.classList.toggle('active', tabType === 'interactive');
+
+    // Update map containers
+    googleMapContainer.classList.toggle('active', tabType === 'google');
+    interactiveMapContainer.classList.toggle('active', tabType === 'interactive');
+
+    this.announceToScreenReader(`Switched to ${tabType === 'google' ? 'next cleanup location' : 'interactive beach'} map`);
+  }
+
+  /**
+   * Join the next cleanup event
+   */
+  joinNextCleanup() {
+    // Create a rally entry for the next cleanup
+    const nextCleanup = {
+      id: Date.now(),
+      name: 'Pasir Ris Beach Cleanup Rally',
+      location: 'Pasir Ris Beach - Street View Asia',
+      date: this.getNextSaturday().toISOString().slice(0, 16),
+      description: 'Join us for our weekly beach cleanup at Pasir Ris! Perfect for beginners and families.',
+      creator: { name: 'ShoreSquad Team' },
+      participants: 15,
+      status: 'active',
+      coordinates: [1.381497, 103.955574]
+    };
+
+    // Add to rallies if not already there
+    const existingRally = this.rallies.find(r => r.location.includes('Pasir Ris'));
+    if (!existingRally) {
+      this.rallies.unshift(nextCleanup);
+      this.updateActiveRallies();
+    }
+
+    // Show success message
+    this.showNotification('🎉 You\'ve joined the Pasir Ris Beach Cleanup! See you there!', 'success');
+    this.announceToScreenReader('Joined Pasir Ris Beach cleanup rally');
+
+    // Scroll to rallies section to show the joined event
+    setTimeout(() => {
+      this.scrollToSection('#rallies');
+    }, 1000);
+  }
+
+  /**
+   * Get next Saturday date for default cleanup
+   */
+  getNextSaturday() {
+    const today = new Date();
+    const nextSaturday = new Date();
+    const daysUntilSaturday = (6 - today.getDay() + 7) % 7;
+    nextSaturday.setDate(today.getDate() + (daysUntilSaturday === 0 ? 7 : daysUntilSaturday));
+    nextSaturday.setHours(9, 0, 0, 0); // 9 AM
+    return nextSaturday;
   }
 
   /**

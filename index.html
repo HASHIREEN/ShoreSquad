@@ -150,11 +150,45 @@
                 
                 <div class="map-container">
                     <div class="map-wrapper">
-                        <div id="beach-map" class="beach-map" role="img" aria-label="Interactive map showing beach cleanup locations">
-                            <div class="map-placeholder">
-                                <div class="map-icon">🗺️</div>
-                                <p>Interactive beach map loading...</p>
-                                <button class="btn btn-primary" id="load-map-btn">Load Map</button>
+                        <!-- Google Maps Embed for Next Cleanup Location -->
+                        <div class="next-cleanup-banner">
+                            <h3>🏖️ Next Cleanup Rally: Pasir Ris Beach</h3>
+                            <p>Join us at the upcoming cleanup event!</p>
+                        </div>
+                        
+                        <div class="maps-tabs">
+                            <button class="map-tab-btn active" id="google-map-tab">Next Cleanup</button>
+                            <button class="map-tab-btn" id="interactive-map-tab">All Beaches</button>
+                        </div>
+                        
+                        <div id="google-map-container" class="map-view active">
+                            <iframe 
+                                src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dUWTgEOJNiMEuY&q=1.381497,103.955574&zoom=16&maptype=satellite&markers=color:red%7Clabel:Next%20Cleanup%7C1.381497,103.955574"
+                                width="100%" 
+                                height="500" 
+                                style="border:0; border-radius: 12px;" 
+                                allowfullscreen="" 
+                                loading="lazy" 
+                                referrerpolicy="no-referrer-when-downgrade"
+                                aria-label="Google Map showing next cleanup location at Pasir Ris Beach">
+                            </iframe>
+                            <div class="cleanup-info-overlay">
+                                <div class="cleanup-details">
+                                    <h4>📍 Pasir Ris Beach Cleanup</h4>
+                                    <p><strong>Location:</strong> Street View Asia</p>
+                                    <p><strong>Coordinates:</strong> 1.381497, 103.955574</p>
+                                    <button class="btn btn-primary" onclick="app.joinNextCleanup()">Join This Cleanup</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="interactive-map-container" class="map-view">
+                            <div id="beach-map" class="beach-map" role="img" aria-label="Interactive map showing beach cleanup locations">
+                                <div class="map-placeholder">
+                                    <div class="map-icon">🗺️</div>
+                                    <p>Interactive beach map loading...</p>
+                                    <button class="btn btn-primary" id="load-map-btn">Load Map</button>
+                                </div>
                             </div>
                         </div>
                     </div>
